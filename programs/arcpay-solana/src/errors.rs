@@ -10,4 +10,6 @@ pub enum ArcPayError {
     Unauthorized,
     #[msg("Commission must be between 0 and 10000 basis points")]
     InvalidCommission,
+    #[msg("Listing is not active")]
+    ListingNotActive,
 }
