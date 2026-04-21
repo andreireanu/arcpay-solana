@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use crate::state::UserProfile;
+use crate::state::{UserProfile, WalletRegistered};
 
 #[derive(Accounts)]
 pub struct Register<'info> {
@@ -22,5 +22,12 @@ pub fn handler(ctx: Context<Register>) -> Result<()> {
     let profile = &mut ctx.accounts.user_profile;
     profile.wallet = ctx.accounts.user.key();
     profile.bump = ctx.bumps.user_profile;
+
+    emit!(WalletRegistered {
+        user_profile: ctx.accounts.user_profile.key(),
+        wallet: ctx.accounts.user.key(),
+        timestamp: Clock::get()?.unix_timestamp,
+    });
+
     Ok(())
 }

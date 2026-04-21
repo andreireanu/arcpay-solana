@@ -4,6 +4,7 @@ pub mod create_listing;
 pub mod initialize_config;
 pub mod pause_listing;
 pub mod register;
+pub mod remove_registration;
 pub mod resume_listing;
 pub mod update_config;
 
@@ -14,5 +15,6 @@ pub use create_listing::*;
 pub use initialize_config::*;
 pub use pause_listing::*;
 pub use register::*;
+pub use remove_registration::*;
 pub use resume_listing::*;
 pub use update_config::*;

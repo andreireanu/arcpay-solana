@@ -26,6 +26,13 @@ pub struct Listing {
 }
 
 #[event]
+pub struct WalletRegistered {
+    pub user_profile: Pubkey, // PDA address — used as qr_generator_sellers.id
+    pub wallet: Pubkey,
+    pub timestamp: i64,
+}
+
+#[event]
 pub struct ListingCreated {
     pub listing: Pubkey,
     pub seller: Pubkey,

@@ -43,4 +43,8 @@ pub mod arcpay_solana {
     pub fn accept_listing(ctx: Context<AcceptListing>) -> Result<()> {
         instructions::accept_listing::handler(ctx)
     }
+
+    pub fn remove_registration(ctx: Context<RemoveRegistration>) -> Result<()> {
+        instructions::remove_registration::handler(ctx)
+    }
 }
