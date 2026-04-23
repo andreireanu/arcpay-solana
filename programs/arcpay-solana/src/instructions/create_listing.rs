@@ -25,7 +25,7 @@ pub struct CreateListing<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn handler(ctx: Context<CreateListing>, price_lamports: u64) -> Result<()> {
+pub fn handler(ctx: Context<CreateListing>, price_lamports: u64, uuid: [u8; 16]) -> Result<()> {
     let listing = &mut ctx.accounts.listing;
     listing.seller = ctx.accounts.seller.key();
     listing.price_lamports = price_lamports;
@@ -40,6 +40,7 @@ pub fn handler(ctx: Context<CreateListing>, price_lamports: u64) -> Result<()> {
         listing: listing.key(),
         seller: ctx.accounts.seller.key(),
         price_lamports,
+        uuid,
         timestamp: Clock::get()?.unix_timestamp,
     });
 

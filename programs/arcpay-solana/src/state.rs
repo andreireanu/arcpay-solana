@@ -39,6 +39,7 @@ pub struct ListingCreated {
     pub listing: Pubkey,
     pub seller: Pubkey,
     pub price_lamports: u64,
+    pub uuid: [u8; 16],
     pub timestamp: i64,
 }
 

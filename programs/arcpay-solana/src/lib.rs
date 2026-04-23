@@ -25,8 +25,8 @@ pub mod arcpay_solana {
         instructions::register::handler(ctx, expiry, uuid)
     }
 
-    pub fn create_listing(ctx: Context<CreateListing>, price_lamports: u64) -> Result<()> {
-        instructions::create_listing::handler(ctx, price_lamports)
+    pub fn create_listing(ctx: Context<CreateListing>, price_lamports: u64, uuid: [u8; 16]) -> Result<()> {
+        instructions::create_listing::handler(ctx, price_lamports, uuid)
     }
 
     pub fn pause_listing(ctx: Context<PauseListing>) -> Result<()> {
