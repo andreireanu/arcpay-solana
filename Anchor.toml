@@ -6,7 +6,7 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-arcpay_solana = "DHrS31gfhSxG6RHFgyDnDkAdn8wWkxFtKXpf9hEQ84Kn"
+arcpay_solana = "4TmDTsMfaftRVdDRuMvpBkJgoTUgxrqC9vE2vNGKqLBp"
 
 [registry]
 url = "https://api.apr.dev"
@@ -16,6 +16,6 @@ cluster = "localnet"
 wallet = "~/.config/solana/owner.json"
 
 [scripts]
-test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 \"tests/**/*.ts\""
 deregister = "npx ts-node scripts/deregister.ts"
 initialize = "npx ts-node scripts/initialize.ts"
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 \"tests/**/*.ts\""

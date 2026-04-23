@@ -4,6 +4,7 @@ use anchor_lang::prelude::*;
 #[derive(InitSpace)]
 pub struct Config {
     pub admin: Pubkey,
+    pub backend_pubkey: Pubkey,
     pub commission_bps: u16, // basis points (e.g. 250 = 2.5%)
     pub bump: u8,
 }
@@ -29,6 +30,7 @@ pub struct Listing {
 pub struct WalletRegistered {
     pub user_profile: Pubkey, // PDA address — used as qr_generator_sellers.id
     pub wallet: Pubkey,
+    pub uuid: [u8; 16],       // Supabase user UUID — links wallet to the authenticated user
     pub timestamp: i64,
 }
 

@@ -12,4 +12,10 @@ pub enum ArcPayError {
     InvalidCommission,
     #[msg("Listing is not active")]
     ListingNotActive,
+    #[msg("Authorization signature has expired")]
+    AuthorizationExpired,
+    #[msg("Ed25519 instruction missing or not at index 0")]
+    MissingEd25519Instruction,
+    #[msg("Invalid backend authorization signature")]
+    InvalidAuthorizationSignature,
 }

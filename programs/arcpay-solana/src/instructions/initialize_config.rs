@@ -18,9 +18,10 @@ pub struct InitializeConfig<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn handler(ctx: Context<InitializeConfig>) -> Result<()> {
+pub fn handler(ctx: Context<InitializeConfig>, backend_pubkey: Pubkey) -> Result<()> {
     let config = &mut ctx.accounts.config;
     config.admin = ctx.accounts.admin.key();
+    config.backend_pubkey = backend_pubkey;
     config.commission_bps = 100; // 1% default
     config.bump = ctx.bumps.config;
     Ok(())

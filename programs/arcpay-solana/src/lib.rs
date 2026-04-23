@@ -1,27 +1,28 @@
 use anchor_lang::prelude::*;
 
+pub mod auth;
 pub mod errors;
 pub mod instructions;
 pub mod state;
 
 use instructions::*;
 
-declare_id!("DHrS31gfhSxG6RHFgyDnDkAdn8wWkxFtKXpf9hEQ84Kn");
+declare_id!("4TmDTsMfaftRVdDRuMvpBkJgoTUgxrqC9vE2vNGKqLBp");
 
 #[program]
 pub mod arcpay_solana {
     use super::*;
 
-    pub fn initialize_config(ctx: Context<InitializeConfig>) -> Result<()> {
-        instructions::initialize_config::handler(ctx)
+    pub fn initialize_config(ctx: Context<InitializeConfig>, backend_pubkey: Pubkey) -> Result<()> {
+        instructions::initialize_config::handler(ctx, backend_pubkey)
     }
 
     pub fn update_config(ctx: Context<UpdateConfig>, commission_bps: u16) -> Result<()> {
         instructions::update_config::handler(ctx, commission_bps)
     }
 
-    pub fn register(ctx: Context<Register>) -> Result<()> {
-        instructions::register::handler(ctx)
+    pub fn register(ctx: Context<Register>, expiry: i64, uuid: [u8; 16]) -> Result<()> {
+        instructions::register::handler(ctx, expiry, uuid)
     }
 
     pub fn create_listing(ctx: Context<CreateListing>, price_lamports: u64) -> Result<()> {
