@@ -12,11 +12,13 @@ const backendKeypairBytes = JSON.parse(
 )
 const backendKeypair = anchor.web3.Keypair.fromSecretKey(new Uint8Array(backendKeypairBytes))
 
-await program.methods
-  .initializeConfig(backendKeypair.publicKey)
-  .accounts({ admin: provider.wallet.publicKey })
-  .rpc()
+(async () => {
+  await program.methods
+    .initializeConfig(backendKeypair.publicKey)
+    .accounts({ admin: provider.wallet.publicKey })
+    .rpc()
 
-console.log('config initialized')
-console.log('admin:          ', provider.wallet.publicKey.toBase58())
-console.log('backend pubkey: ', backendKeypair.publicKey.toBase58())
+  console.log('config initialized')
+  console.log('admin:          ', provider.wallet.publicKey.toBase58())
+  console.log('backend pubkey: ', backendKeypair.publicKey.toBase58())
+})()

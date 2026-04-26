@@ -1,11 +1,14 @@
 import * as anchor from '@coral-xyz/anchor'
+import { PublicKey } from '@solana/web3.js'
 
 const provider = anchor.AnchorProvider.env()
 anchor.setProvider(provider)
 
 const program = anchor.workspace.ArcpaySolana
 const admin = provider.wallet.publicKey
-const wallet = new anchor.web3.PublicKey(process.argv[2] ?? admin.toBase58())
+const wallet = new PublicKey(process.argv[2] ?? admin.toBase58());
 
-await program.methods.removeRegistration().accounts({ wallet }).rpc()
-console.log('deregistered:', wallet.toBase58())
+(async () => {
+  await program.methods.removeRegistration().accounts({ wallet }).rpc()
+  console.log('deregistered:', wallet.toBase58())
+})()
