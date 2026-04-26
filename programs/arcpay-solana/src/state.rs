@@ -70,5 +70,6 @@ pub struct ListingAccepted {
     pub buyer: Pubkey,
     pub seller: Pubkey,
     pub amount_lamports: u64,
+    pub fee_lamports: u64,
     pub timestamp: i64,
 }

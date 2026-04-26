@@ -48,4 +48,8 @@ pub mod arcpay_solana {
     pub fn remove_registration(ctx: Context<RemoveRegistration>) -> Result<()> {
         instructions::remove_registration::handler(ctx)
     }
+
+    pub fn withdraw_commission(ctx: Context<WithdrawCommission>, amount: u64) -> Result<()> {
+        instructions::withdraw_commission::handler(ctx, amount)
+    }
 }

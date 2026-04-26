@@ -7,6 +7,7 @@ pub mod register;
 pub mod remove_registration;
 pub mod resume_listing;
 pub mod update_config;
+pub mod withdraw_commission;
 
 #[allow(ambiguous_glob_reexports)]
 pub use accept_listing::*;
@@ -18,3 +19,4 @@ pub use register::*;
 pub use remove_registration::*;
 pub use resume_listing::*;
 pub use update_config::*;
+pub use withdraw_commission::*;

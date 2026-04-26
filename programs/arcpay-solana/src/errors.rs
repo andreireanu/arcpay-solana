@@ -18,4 +18,6 @@ pub enum ArcPayError {
     MissingEd25519Instruction,
     #[msg("Invalid backend authorization signature")]
     InvalidAuthorizationSignature,
+    #[msg("Withdrawal amount exceeds available commission balance")]
+    InsufficientCommissionBalance,
 }
