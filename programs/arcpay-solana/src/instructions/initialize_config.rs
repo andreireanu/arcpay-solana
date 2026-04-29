@@ -22,7 +22,6 @@ pub fn handler(ctx: Context<InitializeConfig>, backend_pubkey: Pubkey) -> Result
     let config = &mut ctx.accounts.config;
     config.admin = ctx.accounts.admin.key();
     config.backend_pubkey = backend_pubkey;
-    config.commission_bps = 1000; // 10% default for testing purposes
     config.bump = ctx.bumps.config;
     Ok(())
 }

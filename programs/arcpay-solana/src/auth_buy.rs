@@ -4,19 +4,30 @@ use crate::errors::ArcPayError;
 
 const ED25519_PROGRAM_ID: Pubkey = pubkey!("Ed25519SigVerify111111111111111111111111111");
 
-pub fn verify_backend_auth(
+/// Verify backend authorization for a buy instruction.
+///
+/// Signed message layout (104 bytes):
+///   [0..32]   buyer pubkey
+///   [32..64]  seller pubkey
+///   [64..80]  offer_id (UUID bytes)
+///   [80..88]  seller_amount (u64 LE)
+///   [88..96]  fee_amount (u64 LE)
+///   [96..104] expiry (i64 LE)
+pub fn verify_buy_auth(
     instructions_sysvar: &AccountInfo,
     backend_pubkey: &Pubkey,
-    wallet: &Pubkey,
-    uuid: &[u8; 16],
+    buyer: &Pubkey,
+    seller: &Pubkey,
+    offer_id: &[u8; 16],
+    seller_amount: u64,
+    fee_amount: u64,
     expiry: i64,
 ) -> Result<()> {
-    // Check the token hasn't expired
     let clock = Clock::get()?;
     require!(clock.unix_timestamp < expiry, ArcPayError::AuthorizationExpired);
 
-    // Scan for the ed25519 instruction — wallet adapters (e.g. Phantom) may prepend
-    // compute budget instructions, so it is not guaranteed to be at index 0.
+    // Scan for the ed25519 instruction — wallet adapters may prepend compute
+    // budget instructions so it is not guaranteed to be at index 0.
     let mut ed25519_ix = None;
     let mut i: usize = 0;
     loop {
@@ -30,10 +41,9 @@ pub fn verify_backend_auth(
         }
     }
     let ix = ed25519_ix.ok_or(error!(ArcPayError::MissingEd25519Instruction))?;
-
     let data = &ix.data;
 
-    // Ed25519 instruction data layout (count and padding are u8, not u16):
+    // Ed25519 instruction data layout:
     // byte 0        count (u8)
     // byte 1        padding (u8)
     // byte 2-3      signature_offset
@@ -43,15 +53,12 @@ pub fn verify_backend_auth(
     // byte 10-11    message_data_offset
     // byte 12-13    message_data_size
     // byte 14-15    message_instruction_index
-    // byte 16+      signature(64) | pubkey(32) | message(56)
+    // byte 16+      signature(64) | pubkey(32) | message(104)
     require!(data.len() >= 16, ArcPayError::InvalidAuthorizationSignature);
+    require!(data[0] >= 1,     ArcPayError::InvalidAuthorizationSignature);
 
-    let count = data[0];
-    require!(count >= 1, ArcPayError::InvalidAuthorizationSignature);
-
-    // Assert all data is inline in ix[0] (instruction indices == 0xFFFF).
-    // Prevents an attacker from pointing signature/pubkey/message at a different
-    // instruction where they might control the bytes at the right offset.
+    // Assert all data is inline (0xFFFF sentinel) to prevent an attacker
+    // from pointing offsets at bytes in a different instruction they control.
     let sig_ix_idx = u16::from_le_bytes([data[4],  data[5]]);
     let pk_ix_idx  = u16::from_le_bytes([data[8],  data[9]]);
     let msg_ix_idx = u16::from_le_bytes([data[14], data[15]]);
@@ -64,29 +71,22 @@ pub fn verify_backend_auth(
     let msg_offset = u16::from_le_bytes([data[10], data[11]]) as usize;
     let msg_size   = u16::from_le_bytes([data[12], data[13]]) as usize;
 
-    require!(data.len() >= pk_offset  + 32,      ArcPayError::InvalidAuthorizationSignature);
-    require!(data.len() >= msg_offset + msg_size, ArcPayError::InvalidAuthorizationSignature);
-    require!(msg_size == 56,                      ArcPayError::InvalidAuthorizationSignature);
+    require!(data.len() >= pk_offset  + 32,       ArcPayError::InvalidAuthorizationSignature);
+    require!(data.len() >= msg_offset + msg_size,  ArcPayError::InvalidAuthorizationSignature);
+    require!(msg_size == 104,                      ArcPayError::InvalidAuthorizationSignature);
 
-    // Check the pubkey that signed matches the backend keypair stored in Config.
-    // Ensures the signature came from our server, not an arbitrary keypair.
     let pk = Pubkey::try_from(&data[pk_offset..pk_offset + 32])
         .map_err(|_| error!(ArcPayError::InvalidAuthorizationSignature))?;
     require_keys_eq!(pk, *backend_pubkey, ArcPayError::InvalidAuthorizationSignature);
 
-    // Extract the signed message and verify each field matches the instruction arguments.
-    // The precompile already verified the signature over this message — we just confirm
-    // the backend signed the right values, not arbitrary ones the caller supplied.
-    let signed_message = &data[msg_offset..msg_offset + 56];
+    let msg = &data[msg_offset..msg_offset + 104];
 
-    // [0..32]  wallet — must match the transaction signer
-    require!(signed_message[0..32] == wallet.as_ref()[..], ArcPayError::InvalidAuthorizationSignature);
-
-    // [32..48] uuid   — must match the uuid argument passed to register()
-    require!(signed_message[32..48] == uuid[..], ArcPayError::InvalidAuthorizationSignature);
-
-    // [48..56] expiry — must match the expiry argument passed to register()
-    require!(signed_message[48..56] == expiry.to_le_bytes()[..], ArcPayError::InvalidAuthorizationSignature);
+    require!(msg[0..32]   == buyer.as_ref()[..],               ArcPayError::InvalidAuthorizationSignature);
+    require!(msg[32..64]  == seller.as_ref()[..],              ArcPayError::InvalidAuthorizationSignature);
+    require!(msg[64..80]  == offer_id[..],                     ArcPayError::InvalidAuthorizationSignature);
+    require!(msg[80..88]  == seller_amount.to_le_bytes()[..],  ArcPayError::InvalidAuthorizationSignature);
+    require!(msg[88..96]  == fee_amount.to_le_bytes()[..],     ArcPayError::InvalidAuthorizationSignature);
+    require!(msg[96..104] == expiry.to_le_bytes()[..],         ArcPayError::InvalidAuthorizationSignature);
 
     Ok(())
 }
