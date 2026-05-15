@@ -1,4 +1,5 @@
 import * as anchor from '@coral-xyz/anchor'
+import { Keypair } from '@solana/web3.js'
 import { readFileSync } from 'fs'
 import { homedir } from 'os'
 
@@ -10,7 +11,7 @@ const program = anchor.workspace.ArcpaySolana
 const backendKeypairBytes = JSON.parse(
   readFileSync(`${homedir()}/.config/solana/arcpay-backend.json`, 'utf8')
 )
-const backendKeypair = anchor.web3.Keypair.fromSecretKey(new Uint8Array(backendKeypairBytes))
+const backendKeypair = Keypair.fromSecretKey(new Uint8Array(backendKeypairBytes));
 
 (async () => {
   await program.methods

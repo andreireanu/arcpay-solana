@@ -20,4 +20,10 @@ pub enum ArcPayError {
     InvalidAuthorizationSignature,
     #[msg("Withdrawal amount exceeds available commission balance")]
     InsufficientCommissionBalance,
+    #[msg("Amount must be greater than zero")]
+    InvalidAmount,
+    #[msg("Unauthorized: not the offer buyer")]
+    NotBuyer,
+    #[msg("Insufficient vault balance")]
+    InsufficientVaultBalance,
 }

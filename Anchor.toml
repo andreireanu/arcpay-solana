@@ -6,7 +6,7 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-arcpay_solana = "4TmDTsMfaftRVdDRuMvpBkJgoTUgxrqC9vE2vNGKqLBp"
+arcpay_solana = "6KELPQtzV7uchqQC2xEAL7u2BR2Hh5cP57YYUgRpnsed"
 
 [registry]
 url = "https://api.apr.dev"
@@ -18,5 +18,5 @@ wallet = "~/.config/solana/owner.json"
 [scripts]
 deregister = "npx ts-node scripts/deregister.ts"
 initialize = "npx ts-node scripts/initialize.ts"
-withdraw = "npx ts-node scripts/withdraw_commission.ts"
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 \"tests/**/*.ts\""
+withdraw = "npx ts-node scripts/withdraw_commission.ts"
