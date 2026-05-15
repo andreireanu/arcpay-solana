@@ -1,8 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::sysvar::instructions::load_instruction_at_checked;
+use crate::constants::ED25519_PROGRAM_ID;
 use crate::errors::ArcPayError;
-
-const ED25519_PROGRAM_ID: Pubkey = pubkey!("Ed25519SigVerify111111111111111111111111111");
 
 /// Verify backend authorization for a buy instruction.
 ///

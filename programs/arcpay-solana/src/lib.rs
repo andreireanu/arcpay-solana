@@ -1,6 +1,8 @@
 use anchor_lang::prelude::*;
 
 pub mod auth_buy;
+pub mod auth_offer;
+pub mod constants;
 pub mod errors;
 pub mod instructions;
 pub mod state;
@@ -29,5 +31,9 @@ pub mod arcpay_solana {
 
     pub fn withdraw_commission(ctx: Context<WithdrawCommission>, amount: u64) -> Result<()> {
         instructions::withdraw_commission::handler(ctx, amount)
+    }
+
+    pub fn offer(ctx: Context<Offer>, uuid: [u8; 16], amount: u64, expiry: i64) -> Result<()> {
+        instructions::offer::handler(ctx, uuid, amount, expiry)
     }
 }

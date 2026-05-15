@@ -15,6 +15,30 @@ pub struct UserProfile {
     pub bump: u8,
 }
 
+#[account]
+#[derive(InitSpace)]
+pub struct SellerVault {
+    pub seller: Pubkey,
+    pub bump: u8,
+}
+
+#[account]
+#[derive(InitSpace)]
+pub struct OfferRecord {
+    pub buyer: Pubkey,
+    pub seller: Pubkey,
+    pub amount: u64,
+    pub bump: u8,
+}
+
+#[event]
+pub struct OfferCreated {
+    pub uuid: [u8; 16],
+    pub buyer: Pubkey,
+    pub amount: u64,
+    pub timestamp: i64,
+}
+
 #[event]
 pub struct WalletRegistered {
     pub user_profile: Pubkey,
