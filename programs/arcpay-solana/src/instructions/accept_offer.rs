@@ -1,8 +1,8 @@
+use crate::auth::auth_accept_offer::verify_accept_offer_auth;
+use crate::errors::ArcPayError;
+use crate::state::{Config, OfferAccepted, SellerVault};
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::sysvar;
-use crate::auth_accept_offer::verify_accept_offer_auth;
-use crate::errors::ArcPayError;
-use crate::state::{Config, SellerVault, OfferAccepted};
 
 #[derive(Accounts)]
 pub struct AcceptOffer<'info> {
@@ -25,7 +25,12 @@ pub struct AcceptOffer<'info> {
     pub instructions_sysvar: UncheckedAccount<'info>,
 }
 
-pub fn handler(ctx: Context<AcceptOffer>, uuid: [u8; 16], total_amount: u64, expiry: i64) -> Result<()> {
+pub fn handler(
+    ctx: Context<AcceptOffer>,
+    uuid: [u8; 16],
+    total_amount: u64,
+    expiry: i64,
+) -> Result<()> {
     require!(total_amount > 0, ArcPayError::InvalidAmount);
 
     verify_accept_offer_auth(
@@ -47,7 +52,11 @@ pub fn handler(ctx: Context<AcceptOffer>, uuid: [u8; 16], total_amount: u64, exp
     // Raw lamport transfer from PDA vault to seller — system_program::transfer
     // cannot be used for PDA accounts that hold data.
     **vault_info.try_borrow_mut_lamports()? -= total_amount;
-    **ctx.accounts.seller.to_account_info().try_borrow_mut_lamports()? += total_amount;
+    **ctx
+        .accounts
+        .seller
+        .to_account_info()
+        .try_borrow_mut_lamports()? += total_amount;
 
     emit!(OfferAccepted {
         uuid,

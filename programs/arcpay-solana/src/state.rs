@@ -64,3 +64,12 @@ pub struct OfferAccepted {
     pub total_amount: u64,
     pub timestamp: i64,
 }
+
+#[event]
+pub struct OfferCanceled {
+    pub uuid: [u8; 16],
+    pub buyer: Pubkey,
+    pub seller: Pubkey,
+    pub amount: u64,
+    pub timestamp: i64,
+}

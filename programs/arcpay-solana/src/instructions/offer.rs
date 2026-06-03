@@ -1,9 +1,9 @@
+use crate::auth::auth_offer::verify_offer_auth;
+use crate::errors::ArcPayError;
+use crate::state::{Config, OfferCreated, OfferRecord, SellerVault};
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::sysvar;
 use anchor_lang::system_program;
-use crate::auth_offer::verify_offer_auth;
-use crate::errors::ArcPayError;
-use crate::state::{Config, SellerVault, OfferRecord, OfferCreated};
 
 #[derive(Accounts)]
 #[instruction(uuid: [u8; 16])]
