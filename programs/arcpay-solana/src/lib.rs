@@ -1,5 +1,6 @@
 use anchor_lang::prelude::*;
 
+pub mod auth_accept_offer;
 pub mod auth_buy;
 pub mod auth_offer;
 pub mod constants;
@@ -35,5 +36,9 @@ pub mod arcpay_solana {
 
     pub fn offer(ctx: Context<Offer>, uuid: [u8; 16], amount: u64, expiry: i64) -> Result<()> {
         instructions::offer::handler(ctx, uuid, amount, expiry)
+    }
+
+    pub fn accept_offer(ctx: Context<AcceptOffer>, uuid: [u8; 16], total_amount: u64, expiry: i64) -> Result<()> {
+        instructions::accept_offer::handler(ctx, uuid, total_amount, expiry)
     }
 }
