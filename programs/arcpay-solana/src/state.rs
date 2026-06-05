@@ -56,3 +56,20 @@ pub struct BuyCompleted {
     pub fee_amount: u64,
     pub timestamp: i64,
 }
+
+#[event]
+pub struct OfferAccepted {
+    pub uuid: [u8; 16],
+    pub seller: Pubkey,
+    pub total_amount: u64,
+    pub timestamp: i64,
+}
+
+#[event]
+pub struct OfferCanceled {
+    pub uuid: [u8; 16],
+    pub buyer: Pubkey,
+    pub seller: Pubkey,
+    pub amount: u64,
+    pub timestamp: i64,
+}

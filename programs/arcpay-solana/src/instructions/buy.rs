@@ -1,8 +1,8 @@
+use crate::auth::auth_buy::verify_buy_auth;
+use crate::state::{BuyCompleted, Config};
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::sysvar;
 use anchor_lang::system_program;
-use crate::auth_buy::verify_buy_auth;
-use crate::state::{Config, BuyCompleted};
 
 #[derive(Accounts)]
 pub struct Buy<'info> {
