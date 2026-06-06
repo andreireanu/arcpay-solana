@@ -1,10 +1,10 @@
 use anchor_lang::prelude::*;
 use crate::errors::ArcPayError;
-use crate::state::{OfferCanceled, OfferRecord, SellerVault};
+use crate::state::{BuyerOfferCanceled, OfferRecord, SellerVault};
 
 #[derive(Accounts)]
 #[instruction(uuid: [u8; 16])]
-pub struct CancelOffer<'info> {
+pub struct BuyerCancelOffer<'info> {
     #[account(mut)]
     pub buyer: Signer<'info>,
 
@@ -30,7 +30,7 @@ pub struct CancelOffer<'info> {
     pub vault: Account<'info, SellerVault>,
 }
 
-pub fn handler(ctx: Context<CancelOffer>, uuid: [u8; 16]) -> Result<()> {
+pub fn handler(ctx: Context<BuyerCancelOffer>, uuid: [u8; 16]) -> Result<()> {
     let amount = ctx.accounts.offer_record.amount;
 
     let vault_info = ctx.accounts.vault.to_account_info();
@@ -45,7 +45,7 @@ pub fn handler(ctx: Context<CancelOffer>, uuid: [u8; 16]) -> Result<()> {
     **vault_info.try_borrow_mut_lamports()? -= amount;
     **ctx.accounts.buyer.to_account_info().try_borrow_mut_lamports()? += amount;
 
-    emit!(OfferCanceled {
+    emit!(BuyerOfferCanceled {
         uuid,
         buyer: ctx.accounts.buyer.key(),
         seller: ctx.accounts.seller.key(),

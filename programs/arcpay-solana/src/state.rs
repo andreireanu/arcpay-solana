@@ -66,10 +66,26 @@ pub struct OfferAccepted {
 }
 
 #[event]
-pub struct OfferCanceled {
+pub struct BuyerOfferCanceled {
     pub uuid: [u8; 16],
     pub buyer: Pubkey,
     pub seller: Pubkey,
     pub amount: u64,
+    pub timestamp: i64,
+}
+
+#[event]
+pub struct SellerOfferCanceled {
+    pub offer_id: [u8; 16],
+    pub seller: Pubkey,
+    pub timestamp: i64,
+}
+
+#[event]
+pub struct OfferAdminRefunded {
+    pub uuid: [u8; 16],
+    pub buyer: Pubkey,
+    pub seller: Pubkey,
+    pub amount: u64, // 0 when vault is None (accepted case, only rent returned)
     pub timestamp: i64,
 }
