@@ -9,7 +9,7 @@ pub struct AcceptOffer<'info> {
     #[account(mut)]
     pub seller: Signer<'info>,
 
-    #[account(seeds = [b"config"], bump = config.bump)]
+    #[account(mut, seeds = [b"config"], bump = config.bump)]
     pub config: Account<'info, Config>,
 
     #[account(
@@ -28,17 +28,23 @@ pub struct AcceptOffer<'info> {
 pub fn handler(
     ctx: Context<AcceptOffer>,
     uuid: [u8; 16],
-    total_amount: u64,
+    seller_amount: u64,
+    fee_amount: u64,
     expiry: i64,
 ) -> Result<()> {
-    require!(total_amount > 0, ArcPayError::InvalidAmount);
+    require!(seller_amount > 0, ArcPayError::InvalidAmount);
+
+    let total_amount = seller_amount
+        .checked_add(fee_amount)
+        .ok_or(ArcPayError::InvalidAmount)?;
 
     verify_accept_offer_auth(
         &ctx.accounts.instructions_sysvar,
         &ctx.accounts.config.backend_pubkey,
         &ctx.accounts.seller.key(),
         &uuid,
-        total_amount,
+        seller_amount,
+        fee_amount,
         expiry,
     )?;
 
@@ -49,19 +55,28 @@ pub fn handler(
         ArcPayError::InsufficientVaultBalance
     );
 
-    // Raw lamport transfer from PDA vault to seller — system_program::transfer
-    // cannot be used for PDA accounts that hold data.
+    // Raw lamport transfer from PDA vault — system_program::transfer cannot be
+    // used for PDA accounts that hold data. The vault payout is split between
+    // the seller and the protocol fee that accrues on the config account.
     **vault_info.try_borrow_mut_lamports()? -= total_amount;
     **ctx
         .accounts
         .seller
         .to_account_info()
-        .try_borrow_mut_lamports()? += total_amount;
+        .try_borrow_mut_lamports()? += seller_amount;
+    if fee_amount > 0 {
+        **ctx
+            .accounts
+            .config
+            .to_account_info()
+            .try_borrow_mut_lamports()? += fee_amount;
+    }
 
     emit!(OfferAccepted {
         uuid,
         seller: ctx.accounts.seller.key(),
-        total_amount,
+        seller_amount,
+        fee_amount,
         timestamp: Clock::get()?.unix_timestamp,
     });
 

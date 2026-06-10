@@ -39,10 +39,11 @@ pub mod arcpay_solana {
     pub fn accept_offer(
         ctx: Context<AcceptOffer>,
         uuid: [u8; 16],
-        total_amount: u64,
+        seller_amount: u64,
+        fee_amount: u64,
         expiry: i64,
     ) -> Result<()> {
-        instructions::accept_offer::handler(ctx, uuid, total_amount, expiry)
+        instructions::accept_offer::handler(ctx, uuid, seller_amount, fee_amount, expiry)
     }
 
     pub fn buyer_cancel_offer(ctx: Context<BuyerCancelOffer>, uuid: [u8; 16]) -> Result<()> {
