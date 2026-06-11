@@ -5,15 +5,17 @@ use crate::errors::ArcPayError;
 
 /// Verify backend authorization for an offer instruction.
 ///
-/// Signed message layout (64 bytes):
+/// Signed message layout (96 bytes):
 ///   [0..32]  buyer pubkey
-///   [32..48] uuid (16 bytes)
-///   [48..56] amount (u64 LE)
-///   [56..64] expiry (i64 LE)
+///   [32..64] seller pubkey
+///   [64..80] uuid (16 bytes)
+///   [80..88] amount (u64 LE)
+///   [88..96] expiry (i64 LE)
 pub fn verify_offer_auth(
     instructions_sysvar: &AccountInfo,
     backend_pubkey: &Pubkey,
     buyer: &Pubkey,
+    seller: &Pubkey,
     uuid: &[u8; 16],
     amount: u64,
     expiry: i64,
@@ -53,18 +55,19 @@ pub fn verify_offer_auth(
 
     require!(data.len() >= pk_offset  + 32,      ArcPayError::InvalidAuthorizationSignature);
     require!(data.len() >= msg_offset + msg_size, ArcPayError::InvalidAuthorizationSignature);
-    require!(msg_size == 64,                      ArcPayError::InvalidAuthorizationSignature);
+    require!(msg_size == 96,                      ArcPayError::InvalidAuthorizationSignature);
 
     let pk = Pubkey::try_from(&data[pk_offset..pk_offset + 32])
         .map_err(|_| error!(ArcPayError::InvalidAuthorizationSignature))?;
     require_keys_eq!(pk, *backend_pubkey, ArcPayError::InvalidAuthorizationSignature);
 
-    let msg = &data[msg_offset..msg_offset + 64];
+    let msg = &data[msg_offset..msg_offset + 96];
 
     require!(msg[0..32]  == buyer.as_ref()[..],        ArcPayError::InvalidAuthorizationSignature);
-    require!(msg[32..48] == uuid[..],                  ArcPayError::InvalidAuthorizationSignature);
-    require!(msg[48..56] == amount.to_le_bytes()[..],  ArcPayError::InvalidAuthorizationSignature);
-    require!(msg[56..64] == expiry.to_le_bytes()[..],  ArcPayError::InvalidAuthorizationSignature);
+    require!(msg[32..64] == seller.as_ref()[..],       ArcPayError::InvalidAuthorizationSignature);
+    require!(msg[64..80] == uuid[..],                  ArcPayError::InvalidAuthorizationSignature);
+    require!(msg[80..88] == amount.to_le_bytes()[..],  ArcPayError::InvalidAuthorizationSignature);
+    require!(msg[88..96] == expiry.to_le_bytes()[..],  ArcPayError::InvalidAuthorizationSignature);
 
     Ok(())
 }

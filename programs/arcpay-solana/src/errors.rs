@@ -2,28 +2,16 @@ use anchor_lang::prelude::*;
 
 #[error_code]
 pub enum ArcPayError {
-    #[msg("Wallet already registered")]
-    AlreadyRegistered,
-    #[msg("Wallet not registered")]
-    NotRegistered,
-    #[msg("Unauthorized: admin only")]
+    #[msg("Unauthorized")]
     Unauthorized,
-    #[msg("Commission must be between 0 and 10000 basis points")]
-    InvalidCommission,
-    #[msg("Listing is not active")]
-    ListingNotActive,
     #[msg("Authorization signature has expired")]
     AuthorizationExpired,
-    #[msg("Ed25519 instruction missing or not at index 0")]
+    #[msg("Ed25519 signature verification instruction missing")]
     MissingEd25519Instruction,
     #[msg("Invalid backend authorization signature")]
     InvalidAuthorizationSignature,
     #[msg("Withdrawal amount exceeds available commission balance")]
     InsufficientCommissionBalance,
-    #[msg("Amount must be greater than zero")]
+    #[msg("Invalid amount")]
     InvalidAmount,
-    #[msg("Unauthorized: not the offer buyer")]
-    NotBuyer,
-    #[msg("Insufficient vault balance")]
-    InsufficientVaultBalance,
 }

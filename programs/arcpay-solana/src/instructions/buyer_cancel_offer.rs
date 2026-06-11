@@ -1,15 +1,15 @@
 use anchor_lang::prelude::*;
 use crate::errors::ArcPayError;
-use crate::state::{BuyerOfferCanceled, OfferRecord, SellerVault};
+use crate::state::{BuyerOfferCanceled, OfferRecord};
 
+/// Permissionless: the buyer can only ever reclaim their own escrow. A cancel
+/// racing a settlement resolves at the runtime — whichever consumes the record
+/// first wins, the other transaction fails.
 #[derive(Accounts)]
 #[instruction(uuid: [u8; 16])]
 pub struct BuyerCancelOffer<'info> {
     #[account(mut)]
     pub buyer: Signer<'info>,
-
-    /// CHECK: Used only for deriving the seller's vault address. Verified by offer_record constraint.
-    pub seller: UncheckedAccount<'info>,
 
     #[account(
         mut,
@@ -17,39 +17,17 @@ pub struct BuyerCancelOffer<'info> {
         seeds = [b"offer", uuid.as_ref()],
         bump = offer_record.bump,
         constraint = offer_record.buyer == buyer.key() @ ArcPayError::Unauthorized,
-        constraint = offer_record.seller == seller.key() @ ArcPayError::Unauthorized,
     )]
     pub offer_record: Account<'info, OfferRecord>,
-
-    #[account(
-        mut,
-        seeds = [b"vault", seller.key().as_ref()],
-        bump = vault.bump,
-        constraint = vault.seller == seller.key() @ ArcPayError::Unauthorized,
-    )]
-    pub vault: Account<'info, SellerVault>,
 }
 
 pub fn handler(ctx: Context<BuyerCancelOffer>, uuid: [u8; 16]) -> Result<()> {
-    let amount = ctx.accounts.offer_record.amount;
-
-    let vault_info = ctx.accounts.vault.to_account_info();
-    let rent_exempt = Rent::get()?.minimum_balance(vault_info.data_len());
-    
-    require!(
-        vault_info.lamports() >= rent_exempt + amount,
-        ArcPayError::InsufficientVaultBalance
-    );
-
-    // Raw lamport transfer from PDA vault back to buyer
-    **vault_info.try_borrow_mut_lamports()? -= amount;
-    **ctx.accounts.buyer.to_account_info().try_borrow_mut_lamports()? += amount;
-
+    // Escrow lives in the record itself; `close = buyer` sweeps amount + rent.
     emit!(BuyerOfferCanceled {
         uuid,
         buyer: ctx.accounts.buyer.key(),
-        seller: ctx.accounts.seller.key(),
-        amount,
+        seller: ctx.accounts.offer_record.seller,
+        amount: ctx.accounts.offer_record.amount,
         timestamp: Clock::get()?.unix_timestamp,
     });
 

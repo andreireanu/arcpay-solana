@@ -8,6 +8,6 @@
     "strict": false,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "types": ["node"]
+    "types": ["node", "mocha"]
   }
 }
