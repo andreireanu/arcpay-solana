@@ -5,19 +5,19 @@ use crate::errors::ArcPayError;
 
 /// Verify backend authorization for an accept_offer instruction.
 ///
-/// Signed message layout (72 bytes):
+/// The accept is a consent event only — no funds move — so the message carries
+/// no amounts. The uuid is the witness id that the backend maps to the accepted
+/// counter offers in the database.
+///
+/// Signed message layout (56 bytes):
 ///   [0..32]  seller pubkey
 ///   [32..48] uuid (16 bytes)
-///   [48..56] seller_amount (u64 LE)
-///   [56..64] fee_amount (u64 LE)
-///   [64..72] expiry (i64 LE)
+///   [48..56] expiry (i64 LE)
 pub fn verify_accept_offer_auth(
     instructions_sysvar: &AccountInfo,
     backend_pubkey: &Pubkey,
     seller: &Pubkey,
     uuid: &[u8; 16],
-    seller_amount: u64,
-    fee_amount: u64,
     expiry: i64,
 ) -> Result<()> {
     let clock = Clock::get()?;
@@ -55,19 +55,17 @@ pub fn verify_accept_offer_auth(
 
     require!(data.len() >= pk_offset  + 32,       ArcPayError::InvalidAuthorizationSignature);
     require!(data.len() >= msg_offset + msg_size,  ArcPayError::InvalidAuthorizationSignature);
-    require!(msg_size == 72,                       ArcPayError::InvalidAuthorizationSignature);
+    require!(msg_size == 56,                       ArcPayError::InvalidAuthorizationSignature);
 
     let pk = Pubkey::try_from(&data[pk_offset..pk_offset + 32])
         .map_err(|_| error!(ArcPayError::InvalidAuthorizationSignature))?;
     require_keys_eq!(pk, *backend_pubkey, ArcPayError::InvalidAuthorizationSignature);
 
-    let msg = &data[msg_offset..msg_offset + 72];
+    let msg = &data[msg_offset..msg_offset + 56];
 
-    require!(msg[0..32]  == seller.as_ref()[..],              ArcPayError::InvalidAuthorizationSignature);
-    require!(msg[32..48] == uuid[..],                         ArcPayError::InvalidAuthorizationSignature);
-    require!(msg[48..56] == seller_amount.to_le_bytes()[..],  ArcPayError::InvalidAuthorizationSignature);
-    require!(msg[56..64] == fee_amount.to_le_bytes()[..],     ArcPayError::InvalidAuthorizationSignature);
-    require!(msg[64..72] == expiry.to_le_bytes()[..],         ArcPayError::InvalidAuthorizationSignature);
+    require!(msg[0..32]  == seller.as_ref()[..],      ArcPayError::InvalidAuthorizationSignature);
+    require!(msg[32..48] == uuid[..],                 ArcPayError::InvalidAuthorizationSignature);
+    require!(msg[48..56] == expiry.to_le_bytes()[..], ArcPayError::InvalidAuthorizationSignature);
 
     Ok(())
 }

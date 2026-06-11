@@ -36,14 +36,8 @@ pub mod arcpay_solana {
         instructions::offer::handler(ctx, uuid, amount, expiry)
     }
 
-    pub fn accept_offer(
-        ctx: Context<AcceptOffer>,
-        uuid: [u8; 16],
-        seller_amount: u64,
-        fee_amount: u64,
-        expiry: i64,
-    ) -> Result<()> {
-        instructions::accept_offer::handler(ctx, uuid, seller_amount, fee_amount, expiry)
+    pub fn accept_offer(ctx: Context<AcceptOffer>, uuid: [u8; 16], expiry: i64) -> Result<()> {
+        instructions::accept_offer::handler(ctx, uuid, expiry)
     }
 
     pub fn buyer_cancel_offer(ctx: Context<BuyerCancelOffer>, uuid: [u8; 16]) -> Result<()> {
@@ -54,7 +48,12 @@ pub mod arcpay_solana {
         instructions::seller_cancel_offer::handler(ctx, offer_id)
     }
 
-    pub fn admin_refund_offer(ctx: Context<AdminRefundOffer>, uuid: [u8; 16]) -> Result<()> {
-        instructions::admin_refund_offer::handler(ctx, uuid)
+    pub fn admin_settle_offer(
+        ctx: Context<AdminSettleOffer>,
+        uuid: [u8; 16],
+        to_seller: bool,
+        fee_amount: u64,
+    ) -> Result<()> {
+        instructions::admin_settle_offer::handler(ctx, uuid, to_seller, fee_amount)
     }
 }
