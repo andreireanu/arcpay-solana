@@ -8,6 +8,14 @@ skip-lint = false
 [programs.localnet]
 arcpay_solana = "6KELPQtzV7uchqQC2xEAL7u2BR2Hh5cP57YYUgRpnsed"
 
+# Load the program at genesis with the provider wallet as upgrade authority —
+# required since initialize_config verifies the caller against
+# ProgramData.upgrade_authority_address.
+[[test.genesis]]
+address = "6KELPQtzV7uchqQC2xEAL7u2BR2Hh5cP57YYUgRpnsed"
+program = "target/deploy/arcpay_solana.so"
+upgradeable = true
+
 [registry]
 url = "https://api.apr.dev"
 

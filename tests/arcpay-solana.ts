@@ -163,9 +163,33 @@ describe("arcpay-solana", () => {
     await airdrop(backend.publicKey, 1);
     recordRent = await connection.getMinimumBalanceForRentExemption(RECORD_SPACE);
 
+    // init is restricted to the upgrade authority — in `anchor test` that is
+    // the provider wallet, which deployed the program to the local validator
+    const [programData] = PublicKey.findProgramAddressSync(
+      [program.programId.toBuffer()],
+      new PublicKey("BPFLoaderUpgradeab1e11111111111111111111111"),
+    );
+
+    // front-running guard: a non-authority caller must be rejected. Has to run
+    // before the real init — afterwards any attempt fails on "already in use"
+    // and wouldn't exercise the authority constraint.
+    const impostor = Keypair.generate();
+    await airdrop(impostor.publicKey, 1);
+    try {
+      await program.methods
+        .initializeConfig(impostor.publicKey)
+        .accountsPartial({ admin: impostor.publicKey, programData })
+        .signers([impostor])
+        .rpc();
+      assert.fail("impostor was able to initialize config");
+    } catch (e: any) {
+      const got = e?.error?.errorCode?.code ?? String(e);
+      assert(String(got).includes("Unauthorized"), `expected Unauthorized, got: ${e}`);
+    }
+
     await program.methods
       .initializeConfig(backend.publicKey)
-      .accountsPartial({ admin: provider.wallet.publicKey })
+      .accountsPartial({ admin: provider.wallet.publicKey, programData })
       .rpc();
   });
 
