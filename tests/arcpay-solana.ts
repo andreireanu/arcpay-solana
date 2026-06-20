@@ -142,9 +142,9 @@ describe("arcpay-solana", () => {
     return uuid;
   }
 
-  function settleIx(uuid: Buffer, toSeller: boolean, fee: BN) {
+  function settleIx(uuid: Buffer, toSeller: boolean, fee: BN, auto = false) {
     return program.methods
-      .adminSettleOffer([...uuid], toSeller, fee)
+      .adminSettleOffer([...uuid], toSeller, fee, auto)
       .accountsPartial({
         backend: backend.publicKey,
         config: configPda,
@@ -445,6 +445,7 @@ describe("arcpay-solana", () => {
         amount.sub(fee).toString(),
       );
       assert.equal(ev!.data.feeAmount.toString(), fee.toString());
+      assert.equal(ev!.data.auto, false);
 
       assert.equal(
         await balance(seller.publicKey),
@@ -457,6 +458,18 @@ describe("arcpay-solana", () => {
       );
       assert.equal(await balance(backend.publicKey), backendBefore + TX_FEE);
       assert.equal(await connection.getAccountInfo(offerPda(uuid), "confirmed"), null);
+    });
+
+    it("records auto = true when the auto-accept rule triggers settlement", async () => {
+      const amount = new BN(LAMPORTS_PER_SOL);
+      const uuid = await makeOffer(amount);
+
+      const sig = await settleIx(uuid, true, new BN(0), true).rpc();
+      const events = await fetchEvents(sig);
+
+      const ev = events.find((e) => e.name === "offerBought");
+      assert(ev, "OfferBought not emitted");
+      assert.equal(ev!.data.auto, true);
     });
 
     it("fails when fee exceeds the escrowed amount", async () => {
@@ -477,7 +490,7 @@ describe("arcpay-solana", () => {
 
       await expectFail(
         program.methods
-          .adminSettleOffer([...uuid], true, new BN(0))
+          .adminSettleOffer([...uuid], true, new BN(0), false)
           .accountsPartial({
             backend: impostor.publicKey,
             config: configPda,
@@ -499,7 +512,7 @@ describe("arcpay-solana", () => {
 
       await expectFail(
         program.methods
-          .adminSettleOffer([...uuid], true, new BN(0))
+          .adminSettleOffer([...uuid], true, new BN(0), false)
           .accountsPartial({
             backend: backend.publicKey,
             config: configPda,

@@ -10,6 +10,10 @@ use crate::state::{Config, OfferBought, OfferRecord, OfferRefunded};
 /// backend can only route escrow to the seller the buyer chose, or back to the
 /// buyer. In both cases `close = buyer` returns the rent to the buyer, minus the
 /// TX_FEE the backend recovers for paying the network fee.
+///
+/// `auto` is emit-only: it records whether the backend's auto-accept rule (true)
+/// or a manual seller acceptance (false) triggered the payout, and is carried on
+/// the `OfferBought` event without affecting control flow.
 #[derive(Accounts)]
 #[instruction(uuid: [u8; 16])]
 pub struct AdminSettleOffer<'info> {
@@ -50,6 +54,7 @@ pub fn handler(
     uuid: [u8; 16],
     to_seller: bool,
     fee_amount: u64,
+    auto: bool,
 ) -> Result<()> {
     let amount = ctx.accounts.offer_record.amount;
     let offer_record_info = ctx.accounts.offer_record.to_account_info();
@@ -78,6 +83,7 @@ pub fn handler(
             seller: ctx.accounts.seller.key(),
             seller_amount,
             fee_amount,
+            auto,
             timestamp,
         });
     } else {
