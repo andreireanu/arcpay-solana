@@ -1,3 +1,4 @@
+use crate::errors::ArcPayError;
 use crate::state::Config;
 use anchor_lang::prelude::*;
 
@@ -14,6 +15,19 @@ pub struct InitializeConfig<'info> {
         bump,
     )]
     pub config: Account<'info, Config>,
+
+    /// This program's account, verified to point at `program_data`. Together
+    /// with the constraint below it restricts initialization to the program's
+    /// upgrade authority (the deployer), closing the deploy→init front-running
+    /// window where anyone could otherwise become admin.
+    #[account(constraint = program.programdata_address()? == Some(program_data.key()))]
+    pub program: Program<'info, crate::program::ArcpaySolana>,
+
+    #[account(
+        constraint = program_data.upgrade_authority_address == Some(admin.key())
+            @ ArcPayError::Unauthorized,
+    )]
+    pub program_data: Account<'info, ProgramData>,
 
     pub system_program: Program<'info, System>,
 }

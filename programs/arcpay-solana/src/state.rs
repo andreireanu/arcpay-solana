@@ -60,6 +60,9 @@ pub struct SellerOfferCanceled {
 
 /// Backend-driven settlement of an accepted offer: escrow paid out to the seller
 /// (minus fee).
+///
+/// `auto` distinguishes how the settlement was triggered: `true` when the
+/// backend's auto-accept rule fired, `false` when a seller manually accepted.
 #[event]
 pub struct OfferBought {
     pub uuid: [u8; 16],
@@ -67,6 +70,7 @@ pub struct OfferBought {
     pub seller: Pubkey,
     pub seller_amount: u64,
     pub fee_amount: u64,
+    pub auto: bool,
     pub timestamp: i64,
 }
 

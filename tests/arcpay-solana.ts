@@ -142,9 +142,9 @@ describe("arcpay-solana", () => {
     return uuid;
   }
 
-  function settleIx(uuid: Buffer, toSeller: boolean, fee: BN) {
+  function settleIx(uuid: Buffer, toSeller: boolean, fee: BN, auto = false) {
     return program.methods
-      .adminSettleOffer([...uuid], toSeller, fee)
+      .adminSettleOffer([...uuid], toSeller, fee, auto)
       .accountsPartial({
         backend: backend.publicKey,
         config: configPda,
@@ -163,9 +163,33 @@ describe("arcpay-solana", () => {
     await airdrop(backend.publicKey, 1);
     recordRent = await connection.getMinimumBalanceForRentExemption(RECORD_SPACE);
 
+    // init is restricted to the upgrade authority — in `anchor test` that is
+    // the provider wallet, which deployed the program to the local validator
+    const [programData] = PublicKey.findProgramAddressSync(
+      [program.programId.toBuffer()],
+      new PublicKey("BPFLoaderUpgradeab1e11111111111111111111111"),
+    );
+
+    // front-running guard: a non-authority caller must be rejected. Has to run
+    // before the real init — afterwards any attempt fails on "already in use"
+    // and wouldn't exercise the authority constraint.
+    const impostor = Keypair.generate();
+    await airdrop(impostor.publicKey, 1);
+    try {
+      await program.methods
+        .initializeConfig(impostor.publicKey)
+        .accountsPartial({ admin: impostor.publicKey, programData })
+        .signers([impostor])
+        .rpc();
+      assert.fail("impostor was able to initialize config");
+    } catch (e: any) {
+      const got = e?.error?.errorCode?.code ?? String(e);
+      assert(String(got).includes("Unauthorized"), `expected Unauthorized, got: ${e}`);
+    }
+
     await program.methods
       .initializeConfig(backend.publicKey)
-      .accountsPartial({ admin: provider.wallet.publicKey })
+      .accountsPartial({ admin: provider.wallet.publicKey, programData })
       .rpc();
   });
 
@@ -421,6 +445,7 @@ describe("arcpay-solana", () => {
         amount.sub(fee).toString(),
       );
       assert.equal(ev!.data.feeAmount.toString(), fee.toString());
+      assert.equal(ev!.data.auto, false);
 
       assert.equal(
         await balance(seller.publicKey),
@@ -433,6 +458,18 @@ describe("arcpay-solana", () => {
       );
       assert.equal(await balance(backend.publicKey), backendBefore + TX_FEE);
       assert.equal(await connection.getAccountInfo(offerPda(uuid), "confirmed"), null);
+    });
+
+    it("records auto = true when the auto-accept rule triggers settlement", async () => {
+      const amount = new BN(LAMPORTS_PER_SOL);
+      const uuid = await makeOffer(amount);
+
+      const sig = await settleIx(uuid, true, new BN(0), true).rpc();
+      const events = await fetchEvents(sig);
+
+      const ev = events.find((e) => e.name === "offerBought");
+      assert(ev, "OfferBought not emitted");
+      assert.equal(ev!.data.auto, true);
     });
 
     it("fails when fee exceeds the escrowed amount", async () => {
@@ -453,7 +490,7 @@ describe("arcpay-solana", () => {
 
       await expectFail(
         program.methods
-          .adminSettleOffer([...uuid], true, new BN(0))
+          .adminSettleOffer([...uuid], true, new BN(0), false)
           .accountsPartial({
             backend: impostor.publicKey,
             config: configPda,
@@ -475,7 +512,7 @@ describe("arcpay-solana", () => {
 
       await expectFail(
         program.methods
-          .adminSettleOffer([...uuid], true, new BN(0))
+          .adminSettleOffer([...uuid], true, new BN(0), false)
           .accountsPartial({
             backend: backend.publicKey,
             config: configPda,

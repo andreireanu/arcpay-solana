@@ -53,7 +53,8 @@ pub mod arcpay_solana {
         uuid: [u8; 16],
         to_seller: bool,
         fee_amount: u64,
+        auto: bool,
     ) -> Result<()> {
-        instructions::admin_settle_offer::handler(ctx, uuid, to_seller, fee_amount)
+        instructions::admin_settle_offer::handler(ctx, uuid, to_seller, fee_amount, auto)
     }
 }
