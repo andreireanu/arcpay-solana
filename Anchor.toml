@@ -24,7 +24,6 @@ cluster = "localnet"
 wallet = "~/.config/solana/owner.json"
 
 [scripts]
-deregister = "npx ts-node scripts/deregister.ts"
 initialize = "npx ts-node scripts/initialize.ts"
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 \"tests/**/*.ts\""
 withdraw = "npx ts-node scripts/withdraw_commission.ts"

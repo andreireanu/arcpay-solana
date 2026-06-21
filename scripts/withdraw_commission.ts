@@ -1,6 +1,15 @@
 import * as anchor from "@coral-xyz/anchor";
 import { BN } from "@coral-xyz/anchor";
 
+// Load ANCHOR_PROVIDER_URL / ANCHOR_WALLET from a local .env if present, before
+// AnchorProvider.env() reads them. Falls through to the ambient environment
+// (e.g. when run via `anchor run`) if there is no .env.
+try {
+  process.loadEnvFile();
+} catch {
+  // no .env present — use the existing environment
+}
+
 const provider = anchor.AnchorProvider.env();
 anchor.setProvider(provider);
 

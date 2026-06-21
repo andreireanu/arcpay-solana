@@ -1,3 +1,15 @@
+//! Open an escrowed buyer offer.
+//!
+//! "Offer" spans two things, in flow order: the seller's off-chain listing
+//! (no on-chain object, referenced only by an id), and the buyer's on-chain
+//! response created here — an `OfferRecord` PDA holding escrow, which in product
+//! terms is the buyer's *counteroffer*. The record carries its own `uuid`,
+//! independent of the seller's listing id, and the two are never linked
+//! on-chain: only the backend database knows which buyer offer answers which
+//! listing, so buyer offers stay anonymous on-chain. The record resolves via
+//! `buyer_cancel_offer` (buyer reclaims) or `admin_settle_offer` (backend pays
+//! the seller or refunds the buyer).
+
 use crate::auth::auth_offer::verify_offer_auth;
 use crate::errors::ArcPayError;
 use crate::state::{Config, OfferCreated, OfferRecord};
@@ -5,6 +17,8 @@ use anchor_lang::prelude::*;
 use anchor_lang::solana_program::sysvar;
 use anchor_lang::system_program;
 
+/// Accounts for `offer`: payer/buyer, the backend-verified seller, `Config`, the
+/// new `OfferRecord` escrow PDA (seeded by `uuid`), and the Instructions sysvar.
 #[derive(Accounts)]
 #[instruction(uuid: [u8; 16])]
 pub struct Offer<'info> {
@@ -33,6 +47,8 @@ pub struct Offer<'info> {
     pub system_program: Program<'info, System>,
 }
 
+/// Verify the backend authorization, initialize the `OfferRecord`, move the
+/// buyer's `amount` into it as escrow, and emit `OfferCreated`.
 pub fn handler(ctx: Context<Offer>, uuid: [u8; 16], amount: u64, expiry: i64) -> Result<()> {
     require!(amount > 0, ArcPayError::InvalidAmount);
 

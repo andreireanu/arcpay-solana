@@ -1,7 +1,14 @@
+//! Create the singleton `Config` PDA. Restricted to the program's upgrade
+//! authority (the deployer) so nobody can front-run initialization and seize
+//! admin in the window between deploy and init.
+
 use crate::errors::ArcPayError;
 use crate::state::Config;
 use anchor_lang::prelude::*;
 
+/// Accounts for `initialize_config`: the deployer-signer, the `Config` PDA being
+/// created, and the program/program-data accounts used to prove the signer is
+/// the upgrade authority.
 #[derive(Accounts)]
 pub struct InitializeConfig<'info> {
     #[account(mut)]
@@ -32,6 +39,7 @@ pub struct InitializeConfig<'info> {
     pub system_program: Program<'info, System>,
 }
 
+/// Record the admin (the deployer) and the backend signing key in `Config`.
 pub fn handler(ctx: Context<InitializeConfig>, backend_pubkey: Pubkey) -> Result<()> {
     let config = &mut ctx.accounts.config;
     config.admin = ctx.accounts.admin.key();

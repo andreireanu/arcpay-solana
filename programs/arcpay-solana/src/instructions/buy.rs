@@ -1,9 +1,19 @@
+//! Instant buy: settle an order in a single transaction, no escrow.
+//!
+//! The buyer pays `seller_amount + fee_amount` up front; the seller's share is
+//! transferred immediately and the protocol fee is retained in `Config`. The
+//! backend co-signs the order (`verify_buy_auth`), so this path needs no seller
+//! interaction. For the deferred, escrowed flow see `offer`.
+
 use crate::auth::auth_buy::verify_buy_auth;
 use crate::state::{BuyCompleted, Config};
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::sysvar;
 use anchor_lang::system_program;
 
+/// Accounts for `buy`: payer/buyer, the backend-verified seller recipient, the
+/// fee-collecting `Config`, and the Instructions sysvar holding the prepended
+/// ed25519 authorization.
 #[derive(Accounts)]
 pub struct Buy<'info> {
     #[account(mut)]
@@ -23,6 +33,8 @@ pub struct Buy<'info> {
     pub system_program: Program<'info, System>,
 }
 
+/// Verify the backend authorization, pay the seller, retain the fee in `Config`,
+/// and emit `BuyCompleted`.
 pub fn handler(
     ctx: Context<Buy>,
     seller_amount: u64,

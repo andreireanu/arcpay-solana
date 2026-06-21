@@ -1,7 +1,13 @@
+//! Admin withdrawal of accrued protocol fees from `Config`. Fees collect in the
+//! `Config` account's balance above its rent minimum (from buys and
+//! settlements); this pays out up to that surplus, never touching rent.
+
 use anchor_lang::prelude::*;
 use crate::state::Config;
 use crate::errors::ArcPayError;
 
+/// Accounts for `withdraw_commission`: the admin signer (checked via
+/// `has_one`) and the fee-holding `Config` PDA.
 #[derive(Accounts)]
 pub struct WithdrawCommission<'info> {
     #[account(mut)]
@@ -16,6 +22,7 @@ pub struct WithdrawCommission<'info> {
     pub config: Account<'info, Config>,
 }
 
+/// Move up to the rent-free surplus of `Config` (the accrued fees) to the admin.
 pub fn handler(ctx: Context<WithdrawCommission>, amount: u64) -> Result<()> {
     let config_info = ctx.accounts.config.to_account_info();
     let rent_minimum = Rent::get()?.minimum_balance(config_info.data_len());
