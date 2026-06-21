@@ -1,3 +1,9 @@
+//! Buyer reclaims their own escrow, closing the `OfferRecord` and sweeping its
+//! balance (escrow + rent) back to the buyer. Needs no backend authorization —
+//! the account constraints guarantee a buyer can only ever recover their own
+//! funds. Not version-gated, so escrow can never be trapped behind a pending
+//! upgrade.
+
 use anchor_lang::prelude::*;
 use crate::errors::ArcPayError;
 use crate::state::{BuyerOfferCanceled, OfferRecord};
@@ -21,6 +27,8 @@ pub struct BuyerCancelOffer<'info> {
     pub offer_record: Account<'info, OfferRecord>,
 }
 
+/// Emit `BuyerOfferCanceled`; the `close = buyer` constraint returns the
+/// escrowed amount plus rent to the buyer as the record is closed.
 pub fn handler(ctx: Context<BuyerCancelOffer>, uuid: [u8; 16]) -> Result<()> {
     // Escrow lives in the record itself; `close = buyer` sweeps amount + rent.
     emit!(BuyerOfferCanceled {

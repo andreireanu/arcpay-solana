@@ -1,3 +1,10 @@
+//! Backend-driven settlement of an escrowed `OfferRecord`: pay the seller
+//! (minus fee) or refund the buyer. The payout targets and amount come from the
+//! record itself, so even a compromised backend can only route escrow to the
+//! seller the buyer chose or back to the buyer — never elsewhere. Settling a
+//! record closes it, so each offer pays out exactly once and a cancel racing a
+//! settle is resolved by whichever consumes the record first.
+
 use anchor_lang::prelude::*;
 use crate::constants::TX_FEE;
 use crate::errors::ArcPayError;

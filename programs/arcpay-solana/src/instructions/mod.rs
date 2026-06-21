@@ -1,3 +1,5 @@
+//! Instruction handlers, one module per program entry point.
+
 pub mod accept_offer;
 pub mod admin_settle_offer;
 pub mod buy;

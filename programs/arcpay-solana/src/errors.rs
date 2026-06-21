@@ -1,5 +1,8 @@
+//! Program error codes surfaced to clients (and embedded in the IDL).
+
 use anchor_lang::prelude::*;
 
+/// Errors returned by the ArcPay program.
 #[error_code]
 pub enum ArcPayError {
     #[msg("Unauthorized")]

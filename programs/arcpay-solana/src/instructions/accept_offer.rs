@@ -1,3 +1,8 @@
+//! Seller acceptance: an on-chain consent signal for the counter offers the
+//! backend mapped to a uuid. Acceptance and settlement are deliberately
+//! separate — acceptance is consent, while `admin_settle_offer` is the
+//! authoritative movement of funds.
+
 use crate::auth::auth_accept_offer::verify_accept_offer_auth;
 use crate::state::{Config, OfferAccepted};
 use anchor_lang::prelude::*;
@@ -19,6 +24,7 @@ pub struct AcceptOffer<'info> {
     pub instructions_sysvar: UncheckedAccount<'info>,
 }
 
+/// Verify the backend authorization and emit `OfferAccepted` (no funds move).
 pub fn handler(ctx: Context<AcceptOffer>, uuid: [u8; 16], expiry: i64) -> Result<()> {
     verify_accept_offer_auth(
         &ctx.accounts.instructions_sysvar,
